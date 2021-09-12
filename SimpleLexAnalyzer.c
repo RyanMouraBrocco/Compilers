@@ -38,8 +38,19 @@ typedef enum
     SUBTRACTION,
     ADDITION,
     DIVISION,
-    MULTIPLICATION
+    MULTIPLICATION,
+    RELATIONAL_OPERATOR
 } TAtom;
+
+typedef enum
+{
+    LT,
+    LE,
+    EQ,
+    NE,
+    GT,
+    GE,
+} TRelationalOperator;
 
 typedef struct
 {
@@ -47,6 +58,7 @@ typedef struct
     int line;
     int integerAttribute;
     char idAttribute[15];
+    TRelationalOperator relationalOperator;
 } TInformationAtom;
 
 char *buffer;
@@ -59,6 +71,7 @@ TInformationAtom getAtom();
 int getSimpleAttribute(TInformationAtom *);
 int getArithmeticOperator(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
+int getRelationalOpertor(TInformationAtom *atom);
 
 int main(void)
 {
@@ -145,7 +158,10 @@ TInformationAtom getAtom()
     }
     else if (getSimpleAttribute(&atom) == 1)
     {
-        getArithmeticOperator(&atom);
+        if (getArithmeticOperator(&atom) == 1)
+        {
+            getRelationalOpertor(&atom);
+        }
     }
 
     return atom;
@@ -348,6 +364,57 @@ int getArithmeticOperator(TInformationAtom *atom)
     {
         buffer++;
         atom->atom = MULTIPLICATION;
+        return 0;
+    }
+
+    return 1;
+}
+
+int getRelationalOpertor(TInformationAtom *atom)
+{
+    if (*buffer == '<')
+    {
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = LT;
+        return 0;
+    }
+    else if (*buffer == '<' && *(buffer + 1) == '=')
+    {
+        buffer++;
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = LE;
+        return 0;
+    }
+    else if (*buffer == '=')
+    {
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = EQ;
+        return 0;
+    }
+    else if (*buffer == '!' && *(buffer + 1) == '=')
+    {
+        buffer++;
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = NE;
+        return 0;
+    }
+    else if (*buffer == '>')
+    {
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = GT;
+        return 0;
+    }
+    else if (*buffer == '>' && *(buffer + 1) == '=')
+    {
+        buffer++;
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = GE;
         return 0;
     }
 
