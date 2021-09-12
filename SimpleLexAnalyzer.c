@@ -29,7 +29,12 @@ typedef enum
     REAL,
     THEN,
     TRUE,
-    WRITE
+    WRITE,
+    OPEN_PARENTHESES,
+    CLOSE_PARENTHESES,
+    DOT,
+    SEMICOLON,
+    COMMA
 } TAtom;
 
 typedef struct
@@ -47,7 +52,7 @@ char *readFile(char *);
 void recognizeId(TInformationAtom *);
 void recognizeNum(TInformationAtom *);
 TInformationAtom getAtom();
-void recognizeAssigment(TInformationAtom *);
+int GetSimpleAttribute(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
 
 int main(void)
@@ -125,17 +130,16 @@ TInformationAtom getAtom()
         atom.atom = EOS;
         atom.line = line;
     }
-    else if (*buffer == ':')
+    else if (GetSimpleAttribute(&atom) == 1)
     {
-        recognizeAssigment(&atom);
-    }
-    else if (isalpha(*buffer))
-    {
-        recognizeId(&atom);
-    }
-    else if (isdigit(*buffer))
-    {
-        recognizeNum(&atom);
+        if (isalpha(*buffer))
+        {
+            recognizeId(&atom);
+        }
+        else if (isdigit(*buffer))
+        {
+            recognizeNum(&atom);
+        }
     }
 
     return atom;
@@ -270,22 +274,46 @@ r3:
     atom->atom = ERROR;
 }
 
-void recognizeAssigment(TInformationAtom *atom)
+int GetSimpleAttribute(TInformationAtom *atom)
 {
-r0:
-    if (*buffer == ':')
+    if (*buffer == ':' && *(buffer + 1) == '=')
     {
         buffer++;
-        goto r1;
-    }
-r1:
-    if (*buffer == '=')
-    {
         buffer++;
+
         atom->atom = ASSIGNMENT;
+        return 0;
     }
-    else
+    else if (*buffer == '(')
     {
-        atom->atom = ERROR;
+        buffer++;
+        atom->atom = OPEN_PARENTHESES;
+        return 0;
     }
+    else if (*buffer == ')')
+    {
+        buffer++;
+        atom->atom = CLOSE_PARENTHESES;
+        return 0;
+    }
+    else if (*buffer == '.')
+    {
+        buffer++;
+        atom->atom = DOT;
+        return 0;
+    }
+    else if (*buffer == ';')
+    {
+        buffer++;
+        atom->atom = SEMICOLON;
+        return 0;
+    }
+    else if (*buffer == ',')
+    {
+        buffer++;
+        atom->atom = COMMA;
+        return 0;
+    }
+
+    return 1;
 }
