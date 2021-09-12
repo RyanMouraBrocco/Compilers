@@ -39,7 +39,8 @@ typedef enum
     ADDITION,
     DIVISION,
     MULTIPLICATION,
-    RELATIONAL_OPERATOR
+    RELATIONAL_OPERATOR,
+    COMMENT
 } TAtom;
 
 typedef enum
@@ -63,6 +64,7 @@ typedef struct
 
 char *buffer;
 int line = 1;
+int isMultilineComment = 1;
 
 char *readFile(char *);
 void recognizeId(TInformationAtom *);
@@ -71,7 +73,7 @@ TInformationAtom getAtom();
 int getSimpleAttribute(TInformationAtom *);
 int getArithmeticOperator(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
-int getRelationalOpertor(TInformationAtom *atom);
+int getRelationalOpertor(TInformationAtom *);
 
 int main(void)
 {
@@ -91,6 +93,8 @@ int main(void)
             printf("linha %d: ATRIBUIÇÃO\n", atom.line);
         if (atom.atom == WHILE)
             printf("linha %d: WILHE : %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == COMMENT)
+            printf("linha %d: Comentário\n", atom.line);
         if (atom.atom == ERROR)
         {
             printf("linha %d: ERRO\n", atom.line);
@@ -147,6 +151,31 @@ TInformationAtom getAtom()
     {
         atom.atom = EOS;
         atom.line = line;
+    }
+    else if (*buffer == '#')
+    {
+        atom.atom = COMMENT;
+        buffer++;
+        while (*buffer != '\n')
+        {
+            buffer++;
+        }
+    }
+    else if (*buffer == '{')
+    {
+        atom.atom = COMMENT;
+        buffer++;
+        while (*buffer != '}' && *buffer != '\x0')
+        {
+            if (*buffer == '\n')
+                line++;
+
+            buffer++;
+        }
+        if (*buffer == '\x0')
+            atom.atom = ERROR;
+        else
+            buffer++;
     }
     else if (isalpha(*buffer))
     {

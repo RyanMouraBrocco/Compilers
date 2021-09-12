@@ -1,3 +1,6 @@
 aa:=22
-while
-while1:=32
+while#teste
+{
+    sa
+}
+while1:=1
