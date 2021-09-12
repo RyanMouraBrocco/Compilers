@@ -34,7 +34,11 @@ typedef enum
     CLOSE_PARENTHESES,
     DOT,
     SEMICOLON,
-    COMMA
+    COMMA,
+    SUBTRACTION,
+    ADDITION,
+    DIVISION,
+    MULTIPLICATION
 } TAtom;
 
 typedef struct
@@ -52,7 +56,8 @@ char *readFile(char *);
 void recognizeId(TInformationAtom *);
 void recognizeNum(TInformationAtom *);
 TInformationAtom getAtom();
-int GetSimpleAttribute(TInformationAtom *);
+int getSimpleAttribute(TInformationAtom *);
+int getArithmeticOperator(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
 
 int main(void)
@@ -130,16 +135,17 @@ TInformationAtom getAtom()
         atom.atom = EOS;
         atom.line = line;
     }
-    else if (GetSimpleAttribute(&atom) == 1)
+    else if (isalpha(*buffer))
     {
-        if (isalpha(*buffer))
-        {
-            recognizeId(&atom);
-        }
-        else if (isdigit(*buffer))
-        {
-            recognizeNum(&atom);
-        }
+        recognizeId(&atom);
+    }
+    else if (isdigit(*buffer))
+    {
+        recognizeNum(&atom);
+    }
+    else if (getSimpleAttribute(&atom) == 1)
+    {
+        getArithmeticOperator(&atom);
     }
 
     return atom;
@@ -274,7 +280,7 @@ r3:
     atom->atom = ERROR;
 }
 
-int GetSimpleAttribute(TInformationAtom *atom)
+int getSimpleAttribute(TInformationAtom *atom)
 {
     if (*buffer == ':' && *(buffer + 1) == '=')
     {
@@ -312,6 +318,36 @@ int GetSimpleAttribute(TInformationAtom *atom)
     {
         buffer++;
         atom->atom = COMMA;
+        return 0;
+    }
+
+    return 1;
+}
+
+int getArithmeticOperator(TInformationAtom *atom)
+{
+    if (*buffer == '-')
+    {
+        buffer++;
+        atom->atom = SUBTRACTION;
+        return 0;
+    }
+    else if (*buffer == '+')
+    {
+        buffer++;
+        atom->atom = ADDITION;
+        return 0;
+    }
+    else if (*buffer == '/')
+    {
+        buffer++;
+        atom->atom = DIVISION;
+        return 0;
+    }
+    else if (*buffer == '*')
+    {
+        buffer++;
+        atom->atom = MULTIPLICATION;
         return 0;
     }
 
