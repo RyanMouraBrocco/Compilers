@@ -40,7 +40,9 @@ typedef enum
     DIVISION,
     MULTIPLICATION,
     RELATIONAL_OPERATOR,
-    COMMENT
+    COMMENT,
+    REAL_NUMBER,
+    CHARACTER
 } TAtom;
 
 typedef enum
@@ -59,6 +61,8 @@ typedef struct
     int line;
     int integerAttribute;
     char idAttribute[15];
+    double doubleAttribute;
+    char charAttribute;
     TRelationalOperator relationalOperator;
 } TInformationAtom;
 
@@ -74,6 +78,7 @@ int getSimpleAttribute(TInformationAtom *);
 int getArithmeticOperator(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
 int getRelationalOpertor(TInformationAtom *);
+void recognizeCharacter(TInformationAtom *);
 
 int main(void)
 {
@@ -176,6 +181,10 @@ TInformationAtom getAtom()
             atom.atom = ERROR;
         else
             buffer++;
+    }
+    else if (*buffer == '\'')
+    {
+        recognizeCharacter(&atom);
     }
     else if (isalpha(*buffer))
     {
@@ -315,14 +324,34 @@ r1:
         goto r2;
     }
 r2:
+    if (*buffer == '.' && *buffer == 'e')
+    {
+        buffer++;
+        buffer++;
+        if (*buffer == '+' || *buffer == '-')
+            buffer++;
 
-    atom->atom = INTEGER_NUMBER;
-    length = buffer - initNum;
-    strncpy(stringNum, initNum, length);
-    atom->integerAttribute = atoi(stringNum);
-    return;
+        goto r1;
+    }
+    else
+    {
+        length = buffer - initNum;
+        strncpy(stringNum, initNum, length);
+        if (strstr(stringNum, 'e') != NULL)
+        {
+            atom->atom = REAL_NUMBER;
+            atom->doubleAttribute = atof(stringNum);
+        }
+        else
+        {
+            atom->atom = INTEGER_NUMBER;
+            atom->integerAttribute = atoi(stringNum);
+        }
+        return;
+    }
 r3:
     atom->atom = ERROR;
+    return;
 }
 
 int getSimpleAttribute(TInformationAtom *atom)
@@ -448,4 +477,19 @@ int getRelationalOpertor(TInformationAtom *atom)
     }
 
     return 1;
+}
+
+void recognizeCharacter(TInformationAtom *atom)
+{
+    if (*buffer == '\'' && isascii(*(buffer + 1)) && *(buffer + 2) == '\'')
+    {
+        buffer++;
+        char value = *buffer;
+        buffer++;
+        buffer++;
+        atom->atom = CHARACTER;
+        atom->charAttribute = value;
+    }
+    else
+        atom->atom = ERROR;
 }
