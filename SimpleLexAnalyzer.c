@@ -98,8 +98,92 @@ int main(void)
             printf("linha %d: ATRIBUIÇÃO\n", atom.line);
         if (atom.atom == WHILE)
             printf("linha %d: WILHE : %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == AND)
+            printf("linha %d: AND: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == BEGIN)
+            printf("linha %d: BEGIN: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == BOOLEAN)
+            printf("linha %d: BOOLEAN: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == CHAR)
+            printf("linha %d: CHAR: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == DO)
+            printf("linha %d: DO: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == ELSE)
+            printf("linha %d: ELSE: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == END)
+            printf("linha %d: END: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == FALSE)
+            printf("linha %d: FALSE: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == IF)
+            printf("linha %d: IF: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == INTEGER)
+            printf("linha %d: INTEGER: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == MOD)
+            printf("linha %d: MOD: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == NOT)
+            printf("linha %d: NOT: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == OR)
+            printf("linha %d: OR: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == PROGRAM)
+            printf("linha %d: PROGRAM: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == READ)
+            printf("linha %d: READ: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == REAL)
+            printf("linha %d: REAL: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == THEN)
+            printf("linha %d: THEN: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == TRUE)
+            printf("linha %d: TRUE: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == WRITE)
+            printf("linha %d: WRITE: %s\n", atom.line, atom.idAttribute);
+        if (atom.atom == OPEN_PARENTHESES)
+            printf("linha %d: ABRE_PAR\n", atom.line);
+        if (atom.atom == CLOSE_PARENTHESES)
+            printf("linha %d: FECHA_PAR\n", atom.line);
+        if (atom.atom == DOT)
+            printf("linha %d: PONTO\n", atom.line);
+        if (atom.atom == SEMICOLON)
+            printf("linha %d: PONTO_VIRGULA\n", atom.line);
+        if (atom.atom == COMMA)
+            printf("linha %d: VIRGULA\n", atom.line);
+        if (atom.atom == SUBTRACTION)
+            printf("linha %d: SUBTRACAO\n", atom.line);
+        if (atom.atom == ADDITION)
+            printf("linha %d: ADICAO\n", atom.line);
+        if (atom.atom == DIVISION)
+            printf("linha %d: DIVISAO\n", atom.line);
+        if (atom.atom == MULTIPLICATION)
+            printf("linha %d: MULTIPLICACAO\n", atom.line);
+        if (atom.atom == REAL_NUMBER)
+            printf("linha %d: NUMERO_REAL: %f\n", atom.line, atom.doubleAttribute);
+        if (atom.atom == CHARACTER)
+            printf("linha %d: CARACTERE: %c\n", atom.line, atom.charAttribute);
+        if (atom.atom == RELATIONAL_OPERATOR)
+        {
+            switch (atom.relationalOperator)
+            {
+            case LT:
+                printf("linha %d: MENOR\n", atom.line);
+                break;
+            case LE:
+                printf("linha %d: MENOR_IGUAL\n", atom.line);
+                break;
+            case EQ:
+                printf("linha %d: IGUAL\n", atom.line);
+                break;
+            case NE:
+                printf("linha %d: DIFERENTE\n", atom.line);
+                break;
+            case GT:
+                printf("linha %d: MAIOR\n", atom.line);
+                break;
+            case GE:
+                printf("linha %d: MAIOR_IGUAL\n", atom.line);
+                break;
+            }
+        }
         if (atom.atom == COMMENT)
-            printf("linha %d: Comentário\n", atom.line);
+            printf("linha %d: COMENTÁRIO\n", atom.line);
         if (atom.atom == ERROR)
         {
             printf("linha %d: ERRO\n", atom.line);
@@ -141,14 +225,11 @@ TInformationAtom getAtom()
     TInformationAtom atom;
     atom.atom = ERROR;
 
-    if (*buffer == ' ')
+    while (*buffer == ' ' || *buffer == '\n')
     {
+        if (*buffer == '\n')
+            line++;
         buffer++;
-    }
-    else if (*buffer == '\n')
-    {
-        buffer++;
-        line++;
     }
 
     atom.line = line;
@@ -337,7 +418,8 @@ r2:
     {
         length = buffer - initNum;
         strncpy(stringNum, initNum, length);
-        if (strstr(stringNum, 'e') != NULL)
+        char eValue[] = "e";
+        if (strstr(stringNum, eValue) != NULL)
         {
             atom->atom = REAL_NUMBER;
             atom->doubleAttribute = atof(stringNum);
@@ -430,19 +512,19 @@ int getArithmeticOperator(TInformationAtom *atom)
 
 int getRelationalOpertor(TInformationAtom *atom)
 {
-    if (*buffer == '<')
-    {
-        buffer++;
-        atom->atom = RELATIONAL_OPERATOR;
-        atom->relationalOperator = LT;
-        return 0;
-    }
-    else if (*buffer == '<' && *(buffer + 1) == '=')
+    if (*buffer == '<' && *(buffer + 1) == '=')
     {
         buffer++;
         buffer++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = LE;
+        return 0;
+    }
+    else if (*buffer == '<')
+    {
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = LT;
         return 0;
     }
     else if (*buffer == '=')
@@ -460,19 +542,19 @@ int getRelationalOpertor(TInformationAtom *atom)
         atom->relationalOperator = NE;
         return 0;
     }
-    else if (*buffer == '>')
-    {
-        buffer++;
-        atom->atom = RELATIONAL_OPERATOR;
-        atom->relationalOperator = GT;
-        return 0;
-    }
     else if (*buffer == '>' && *(buffer + 1) == '=')
     {
         buffer++;
         buffer++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = GE;
+        return 0;
+    }
+    else if (*buffer == '>')
+    {
+        buffer++;
+        atom->atom = RELATIONAL_OPERATOR;
+        atom->relationalOperator = GT;
         return 0;
     }
 
