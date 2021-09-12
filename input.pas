@@ -1,3 +1,4 @@
+teste:=2.e17
 aa:=22
 while#teste
 {
@@ -11,5 +12,5 @@ BEGIN
     command := 2;
     char teste := 'A';
     command = teste;
-    REAL d := 2.e1
+    REAL d := 0.e1
 END

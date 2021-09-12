@@ -79,6 +79,7 @@ int getArithmeticOperator(TInformationAtom *);
 int compareInsensitiveString(char *, char *, char *);
 int getRelationalOpertor(TInformationAtom *);
 void recognizeCharacter(TInformationAtom *);
+double getDoubleValueFromString(char *, int);
 
 int main(void)
 {
@@ -405,14 +406,17 @@ r1:
         goto r2;
     }
 r2:
-    if (*buffer == '.' && *buffer == 'e')
+    if (*buffer == '.' && *(buffer + 1) == 'e')
     {
         buffer++;
         buffer++;
         if (*buffer == '+' || *buffer == '-')
             buffer++;
 
-        goto r1;
+        if (isdigit(*buffer))
+            goto r1;
+        else
+            goto r3;
     }
     else
     {
@@ -422,7 +426,7 @@ r2:
         if (strstr(stringNum, eValue) != NULL)
         {
             atom->atom = REAL_NUMBER;
-            atom->doubleAttribute = atof(stringNum);
+            atom->doubleAttribute = getDoubleValueFromString(stringNum, length);
         }
         else
         {
@@ -574,4 +578,29 @@ void recognizeCharacter(TInformationAtom *atom)
     }
     else
         atom->atom = ERROR;
+}
+
+double getDoubleValueFromString(char *stringNumber, int length)
+{
+    char beforeE[20];
+    int beforeELength;
+    char *afterDotValue;
+    char afterE[20];
+    int afterELength;
+    char finalNumber[20];
+    for (int i = 0; i < length; i++)
+    {
+        if (stringNumber[i] == 'e')
+        {
+            beforeELength = i;
+            afterELength = length - (i + 1);
+            afterDotValue = &(stringNumber[i + 1]);
+            break;
+        }
+    }
+    strncpy(beforeE, stringNumber, beforeELength);
+    strncpy(afterE, afterDotValue, afterELength);
+    strcat(beforeE, afterE);
+    strncpy(finalNumber, beforeE, length - 1);
+    return atof(finalNumber);
 }
