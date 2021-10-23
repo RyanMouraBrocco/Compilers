@@ -344,7 +344,7 @@ r1:
         goto r2;
     }
 r2:
-    if (*buffer == '.' && *(buffer + 1) == 'e')
+    if (*buffer == '.' && (*(buffer + 1) == 'e' || *(buffer + 1) == 'E'))
     {
         buffer++;
         buffer++;
@@ -361,7 +361,8 @@ r2:
         length = buffer - initNum;
         strncpy(stringNum, initNum, length);
         char eValue[] = "e";
-        if (strstr(stringNum, eValue) != NULL)
+        char bigEValue[] = "E";
+        if (strstr(stringNum, eValue) != NULL || strstr(stringNum, bigEValue) != NULL)
         {
             atom->atom = REAL_NUMBER;
             atom->doubleAttribute = getDoubleValueFromString(stringNum, length);
@@ -528,11 +529,14 @@ double getDoubleValueFromString(char *stringNumber, int length)
     char finalNumber[20];
     for (int i = 0; i < length; i++)
     {
-        if (stringNumber[i] == 'e')
+        if (stringNumber[i] == 'e' || stringNumber[i] == 'E')
         {
             beforeELength = i;
             afterELength = length - (i + 1);
-            afterDotValue = &(stringNumber[i + 1]);
+            if(stringNumber[i + 1] == '+' || stringNumber[i + 1] == '-')
+                afterDotValue = &(stringNumber[i + 2]);
+            else
+                afterDotValue = &(stringNumber[i + 1]);
             break;
         }
     }
