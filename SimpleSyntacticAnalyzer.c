@@ -38,11 +38,12 @@ int main(void)
     syntacticAnalyze();
     if (lookahead.atom == EOS)
     {
-        printf("palavra aceita");
+        printf("Códgio aceito");
     }
     else
     {
-        printf("\nErro sintatico 2. Nao cheguei ao final da palavra");
+        printf("\nErro sintatico 2. Nao cheguei ao final do código");
+        exit(1);
     }
 
     printf("\nfim de analise sintatica.");
@@ -60,6 +61,12 @@ TInformationAtom getNextAtom(char **buffer)
         next = getAtom(buffer);
     }
 
+    if (next.atom == ERROR)
+    {
+        printf("Error lexico na linha %d", next.line);
+        exit(1);
+    }
+
     return next;
 }
 
@@ -71,7 +78,7 @@ void consume(TAtom atom)
     }
     else
     {
-        printf("erro sintatico: esperado [%s] encontrado [%s] indice [%ld]\n", "texto A", "textoB", (buffer - iniBuffer) - 1);
+        printf("erro sintatico: esperado [%s] encontrado [%s] indice [%ld]\n", getAtomName(atom), getAtomName(lookahead.atom), (buffer - iniBuffer) - 1);
         exit(1);
     }
 }
