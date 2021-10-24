@@ -1,16 +1,17 @@
-teste:=2.e17
-aa:=22
-while#teste
-{
-    sa
-}
-while1:=1
-if(while1>=23 and aa != 2) THEN
-BEGIN
-    #aqui vai mais paradas
-    integer command;
-    command := 2;
-    char teste := 'A';
-    command = teste;
-    REAL d := 0.e1
-END
+{ programa le uma sequencia de números inteiros
+e encontra o maior }
+Program exemplo;
+integer num, maior, cont, qtd;
+begin
+read(qtd);
+cont:=0;
+maior := 0; #inicializa a variavel maior com 0
+while ( cont < qtd ) do
+begin
+read(num);
+if( num > maior ) then
+maior := num;
+cont := cont + 1
+end;
+write(maior) # imprime o maior valor
+end;

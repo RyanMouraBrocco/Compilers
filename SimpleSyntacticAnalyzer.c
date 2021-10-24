@@ -9,7 +9,7 @@ char *iniBuffer;
 TInformationAtom lookahead;
 
 void consume(TAtom atom);
-TInformationAtom getNextAtom(char *buffer);
+TInformationAtom getNextAtom(char **buffer);
 void syntacticAnalyze();
 void consumeBlock();
 void consumeVariableDeclaration();
@@ -31,11 +31,11 @@ void consumeOperatorTerm();
 
 int main(void)
 {
-    buffer = readFile("input.c");
+    buffer = readFile("input.pas");
     iniBuffer = buffer;
     lookahead = getNextAtom(&buffer);
 
-    syntaticAnalyze();
+    syntacticAnalyze();
     if (lookahead.atom == EOS)
     {
         printf("palavra aceita");
@@ -52,12 +52,12 @@ int main(void)
     return 0;
 }
 
-TInformationAtom getNextAtom(char *buffer)
+TInformationAtom getNextAtom(char **buffer)
 {
-    TInformationAtom next = getAtom(&buffer);
+    TInformationAtom next = getAtom(buffer);
     while (next.atom == COMMENT)
     {
-        next = getAtom(&buffer);
+        next = getAtom(buffer);
     }
 
     return next;
@@ -71,7 +71,7 @@ void consume(TAtom atom)
     }
     else
     {
-        printf("erro sintatico: esperado [%c] encontrado [%c] indice [%d]\n", atom, lookahead.atom, (buffer - iniBuffer) - 1);
+        printf("erro sintatico: esperado [%s] encontrado [%s] indice [%ld]\n", "texto A", "textoB", (buffer - iniBuffer) - 1);
         exit(1);
     }
 }
@@ -140,11 +140,11 @@ void consumeVariableName()
 void consumeCompoundCommand()
 {
     consume(BEGIN);
-    cosumeSimpleCommand();
+    consumeSimpleCommand();
     while (lookahead.atom != END)
     {
         consume(SEMICOLON);
-        cosumeSimpleCommand();
+        consumeSimpleCommand();
     }
     consume(END);
 }
