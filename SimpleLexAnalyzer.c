@@ -3,24 +3,48 @@
 #include <ctype.h>
 #include <string.h>
 #include "AnalyzerTypes.h"
+#include "SimpleLexAnalyzer.h"
+#include "ReaderFile.h"
 
-char *buffer;
 int line = 1;
 int isMultilineComment = 1;
 
-char *readFile(char *);
-void recognizeId(TInformationAtom *);
-void recognizeNum(TInformationAtom *);
-TInformationAtom getAtom();
-int getSimpleAttribute(TInformationAtom *);
-int getArithmeticOperator(TInformationAtom *);
+void recognizeId(TInformationAtom *, char **);
+void recognizeNum(TInformationAtom *, char **);
+int getSimpleAttribute(TInformationAtom *, char **);
+int getArithmeticOperator(TInformationAtom *, char **);
 int compareInsensitiveString(char *, char *, char *);
-int getRelationalOpertor(TInformationAtom *);
-void recognizeCharacter(TInformationAtom *);
+int getRelationalOpertor(TInformationAtom *, char **);
+void recognizeCharacter(TInformationAtom *, char **);
 double getDoubleValueFromString(char *, int);
+
+char *readFile(char *fileName)
+{
+    FILE *file;
+    char *readBuffer;
+    long inputSize;
+    file = fopen(fileName, "r");
+    if (!file)
+    {
+        printf("erro na abertura do arquivo de entrada !");
+        exit(1);
+    }
+
+    fseek(file, 0, SEEK_END);
+    inputSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    readBuffer = (char *)calloc(inputSize, sizeof(char));
+
+    fread(readBuffer, sizeof(char), inputSize, file);
+
+    fclose(file);
+    return readBuffer;
+}
 
 int main(void)
 {
+    char *buffer;
     char *bufferToFree = buffer;
     buffer = readFile("input.pas");
     printf("%s\n\n", buffer);
@@ -28,7 +52,7 @@ int main(void)
 
     while (atom.atom != EOS)
     {
-        atom = getAtom();
+        atom = getAtom(&buffer);
         if (atom.atom == IDENTIFIER)
             printf("linha %d: IDENTIFICADOR : %s\n", atom.line, atom.idAttribute);
         if (atom.atom == INTEGER_NUMBER)
@@ -135,118 +159,94 @@ int main(void)
     return 0;
 }
 
-char *readFile(char *fileName)
-{
-    FILE *file;
-    char *readBuffer;
-    long inputSize;
-    file = fopen(fileName, "r");
-    if (!file)
-    {
-        printf("erro na abertura do arquivo de entrada !");
-        exit(1);
-    }
-
-    fseek(file, 0, SEEK_END);
-    inputSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    readBuffer = (char *)calloc(inputSize, sizeof(char));
-
-    fread(readBuffer, sizeof(char), inputSize, file);
-
-    fclose(file);
-    return readBuffer;
-}
-
-TInformationAtom getAtom()
+TInformationAtom getAtom(char **buffer)
 {
     TInformationAtom atom;
     atom.atom = ERROR;
 
-    while (*buffer == ' ' || *buffer == '\n')
+    while (**buffer == ' ' || **buffer == '\n')
     {
-        if (*buffer == '\n')
+        if (**buffer == '\n')
             line++;
-        buffer++;
+        (*buffer)++;
     }
 
     atom.line = line;
-    if (*buffer == '\x0')
+    if (**buffer == '\x0')
     {
         atom.atom = EOS;
         atom.line = line;
     }
-    else if (*buffer == '#')
+    else if (**buffer == '#')
     {
         atom.atom = COMMENT;
-        buffer++;
-        while (*buffer != '\n')
+        (*buffer)++;
+        while (**buffer != '\n')
         {
-            buffer++;
+            (*buffer)++;
         }
     }
-    else if (*buffer == '{')
+    else if (**buffer == '{')
     {
         atom.atom = COMMENT;
-        buffer++;
-        while (*buffer != '}' && *buffer != '\x0')
+        (*buffer)++;
+        while (**buffer != '}' && **buffer != '\x0')
         {
-            if (*buffer == '\n')
+            if (**buffer == '\n')
                 line++;
 
-            buffer++;
+            (*buffer)++;
         }
-        if (*buffer == '\x0')
+        if (**buffer == '\x0')
             atom.atom = ERROR;
         else
-            buffer++;
+            (*buffer)++;
     }
-    else if (*buffer == '\'')
+    else if (**buffer == '\'')
     {
-        recognizeCharacter(&atom);
+        recognizeCharacter(&atom, buffer);
     }
-    else if (isalpha(*buffer))
+    else if (isalpha(**buffer))
     {
-        recognizeId(&atom);
+        recognizeId(&atom, buffer);
     }
-    else if (isdigit(*buffer))
+    else if (isdigit(**buffer))
     {
-        recognizeNum(&atom);
+        recognizeNum(&atom, buffer);
     }
-    else if (getSimpleAttribute(&atom) == 1)
+    else if (getSimpleAttribute(&atom, buffer) == 1)
     {
-        if (getArithmeticOperator(&atom) == 1)
+        if (getArithmeticOperator(&atom, buffer) == 1)
         {
-            getRelationalOpertor(&atom);
+            getRelationalOpertor(&atom, buffer);
         }
     }
 
     return atom;
 }
 
-void recognizeId(TInformationAtom *atom)
+void recognizeId(TInformationAtom *atom, char **buffer)
 {
-    char *initId = buffer;
+    char *initId = *buffer;
     int length = 0;
 r0:
-    if (isalpha(*buffer))
+    if (isalpha(**buffer))
     {
-        buffer++;
+        (*buffer)++;
         goto r1;
     }
 r1:
-    if (isalpha(*buffer) || isdigit(*buffer) || *buffer == '_')
+    if (isalpha(**buffer) || isdigit(**buffer) || **buffer == '_')
     {
-        buffer++;
+        (*buffer)++;
         goto r1;
     }
-    if (*buffer != '\x0')
+    if (**buffer != '\x0')
     {
         goto r2;
     }
 r2:
-    length = buffer - initId;
+    length = *buffer - initId;
     if (length <= 16)
     {
         strncpy(atom->idAttribute, initId, length);
@@ -316,49 +316,49 @@ int compareInsensitiveString(char *valueToCompare, char *upperCaseValue, char *l
     return 0;
 }
 
-void recognizeNum(TInformationAtom *atom)
+void recognizeNum(TInformationAtom *atom, char **buffer)
 {
-    char *initNum = buffer;
+    char *initNum = *buffer;
     int length = 0;
     char stringNum[20];
 r0:
-    if (isdigit(*buffer))
+    if (isdigit(**buffer))
     {
-        buffer++;
+        (*buffer)++;
         goto r1;
     }
 r1:
-    if (isdigit(*buffer))
+    if (isdigit(**buffer))
     {
-        buffer++;
+        (*buffer)++;
         goto r1;
     }
 
-    if (isalpha(*buffer))
+    if (isalpha(**buffer))
     {
         goto r3;
     }
 
-    if (*buffer != '\x0')
+    if (**buffer != '\x0')
     {
         goto r2;
     }
 r2:
-    if (*buffer == '.' && (*(buffer + 1) == 'e' || *(buffer + 1) == 'E'))
+    if (**buffer == '.' && (*(*buffer + 1) == 'e' || *(*buffer + 1) == 'E'))
     {
-        buffer++;
-        buffer++;
-        if (*buffer == '+' || *buffer == '-')
-            buffer++;
+        (*buffer)++;
+        (*buffer)++;
+        if (**buffer == '+' || **buffer == '-')
+            (*buffer)++;
 
-        if (isdigit(*buffer))
+        if (isdigit(**buffer))
             goto r1;
         else
             goto r3;
     }
     else
     {
-        length = buffer - initNum;
+        length = *buffer - initNum;
         strncpy(stringNum, initNum, length);
         char eValue[] = "e";
         char bigEValue[] = "E";
@@ -379,43 +379,43 @@ r3:
     return;
 }
 
-int getSimpleAttribute(TInformationAtom *atom)
+int getSimpleAttribute(TInformationAtom *atom, char **buffer)
 {
-    if (*buffer == ':' && *(buffer + 1) == '=')
+    if (**buffer == ':' && *(*buffer + 1) == '=')
     {
-        buffer++;
-        buffer++;
+        (*buffer)++;
+        (*buffer)++;
 
         atom->atom = ASSIGNMENT;
         return 0;
     }
-    else if (*buffer == '(')
+    else if (**buffer == '(')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = OPEN_PARENTHESES;
         return 0;
     }
-    else if (*buffer == ')')
+    else if (**buffer == ')')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = CLOSE_PARENTHESES;
         return 0;
     }
-    else if (*buffer == '.')
+    else if (**buffer == '.')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = DOT;
         return 0;
     }
-    else if (*buffer == ';')
+    else if (**buffer == ';')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = SEMICOLON;
         return 0;
     }
-    else if (*buffer == ',')
+    else if (**buffer == ',')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = COMMA;
         return 0;
     }
@@ -423,29 +423,29 @@ int getSimpleAttribute(TInformationAtom *atom)
     return 1;
 }
 
-int getArithmeticOperator(TInformationAtom *atom)
+int getArithmeticOperator(TInformationAtom *atom, char **buffer)
 {
-    if (*buffer == '-')
+    if (**buffer == '-')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = SUBTRACTION;
         return 0;
     }
-    else if (*buffer == '+')
+    else if (**buffer == '+')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = ADDITION;
         return 0;
     }
-    else if (*buffer == '/')
+    else if (**buffer == '/')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = DIVISION;
         return 0;
     }
-    else if (*buffer == '*')
+    else if (**buffer == '*')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = MULTIPLICATION;
         return 0;
     }
@@ -453,49 +453,49 @@ int getArithmeticOperator(TInformationAtom *atom)
     return 1;
 }
 
-int getRelationalOpertor(TInformationAtom *atom)
+int getRelationalOpertor(TInformationAtom *atom, char **buffer)
 {
-    if (*buffer == '<' && *(buffer + 1) == '=')
+    if (**buffer == '<' && *(*buffer + 1) == '=')
     {
-        buffer++;
-        buffer++;
+        (*buffer)++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = LE;
         return 0;
     }
-    else if (*buffer == '<')
+    else if (**buffer == '<')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = LT;
         return 0;
     }
-    else if (*buffer == '=')
+    else if (**buffer == '=')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = EQ;
         return 0;
     }
-    else if (*buffer == '!' && *(buffer + 1) == '=')
+    else if (**buffer == '!' && *(*buffer + 1) == '=')
     {
-        buffer++;
-        buffer++;
+        (*buffer)++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = NE;
         return 0;
     }
-    else if (*buffer == '>' && *(buffer + 1) == '=')
+    else if (**buffer == '>' && *(*buffer + 1) == '=')
     {
-        buffer++;
-        buffer++;
+        (*buffer)++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = GE;
         return 0;
     }
-    else if (*buffer == '>')
+    else if (**buffer == '>')
     {
-        buffer++;
+        (*buffer)++;
         atom->atom = RELATIONAL_OPERATOR;
         atom->relationalOperator = GT;
         return 0;
@@ -504,14 +504,14 @@ int getRelationalOpertor(TInformationAtom *atom)
     return 1;
 }
 
-void recognizeCharacter(TInformationAtom *atom)
+void recognizeCharacter(TInformationAtom *atom, char **buffer)
 {
-    if (*buffer == '\'' && isascii(*(buffer + 1)) && *(buffer + 2) == '\'')
+    if (**buffer == '\'' && isascii(*(*buffer + 1)) && *(*buffer + 2) == '\'')
     {
-        buffer++;
-        char value = *buffer;
-        buffer++;
-        buffer++;
+        (*buffer)++;
+        char value = **buffer;
+        (*buffer)++;
+        (*buffer)++;
         atom->atom = CHARACTER;
         atom->charAttribute = value;
     }
@@ -533,7 +533,7 @@ double getDoubleValueFromString(char *stringNumber, int length)
         {
             beforeELength = i;
             afterELength = length - (i + 1);
-            if(stringNumber[i + 1] == '+' || stringNumber[i + 1] == '-')
+            if (stringNumber[i + 1] == '+' || stringNumber[i + 1] == '-')
                 afterDotValue = &(stringNumber[i + 2]);
             else
                 afterDotValue = &(stringNumber[i + 1]);

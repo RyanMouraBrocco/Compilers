@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "AnalyzerTypes.h"
+#include "SimpleLexAnalyzer.h"
+#include "ReaderFile.h"
 
-char *buffer = "a";
+char *buffer;
 char *iniBuffer;
 TInformationAtom lookahead;
 
@@ -10,10 +12,11 @@ void consume(TInformationAtom atom);
 
 int main(void)
 {
+    buffer = readFile("input.c");
     iniBuffer = buffer;
-    lookahead = obter_atomo();
+    lookahead = getAtom();
 
-    E();
+    syntaticAnalyze();
     if (lookahead.atom == EOS)
     {
         printf("palavra aceita");
@@ -24,15 +27,23 @@ int main(void)
     }
 
     printf("\nfim de analise sintatica.");
+
+    free(iniBuffer);
+
     return 0;
 }
+
 void consume(TInformationAtom atom)
 {
-    if (lookahead == atomo)
-        lookahead = *buffer++; // obter_atomo();
+    if (lookahead.atom == atom.atom)
+        lookahead = getAtom(buffer++);
     else
     {
-        printf("erro sintatico: esperado [%c] encontrado [%c] indice [%d]\n", atomo, lookahead, (buffer - iniBuffer) - 1);
+        printf("erro sintatico: esperado [%c] encontrado [%c] indice [%d]\n", atom.atom, lookahead.atom, (buffer - iniBuffer) - 1);
         exit(1);
     }
+}
+
+void syntacticAnalyze()
+{
 }
