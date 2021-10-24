@@ -4,7 +4,7 @@
 #include <string.h>
 #include "AnalyzerTypes.h"
 #include "SimpleLexAnalyzer.h"
-#include "ReaderFile.h"
+#include "Utils.h"
 
 int line = 1;
 int isMultilineComment = 1;
@@ -13,34 +13,9 @@ void recognizeId(TInformationAtom *, char **);
 void recognizeNum(TInformationAtom *, char **);
 int getSimpleAttribute(TInformationAtom *, char **);
 int getArithmeticOperator(TInformationAtom *, char **);
-int compareInsensitiveString(char *, char *, char *);
 int getRelationalOpertor(TInformationAtom *, char **);
 void recognizeCharacter(TInformationAtom *, char **);
 double getDoubleValueFromString(char *, int);
-
-char *readFile(char *fileName)
-{
-    FILE *file;
-    char *readBuffer;
-    long inputSize;
-    file = fopen(fileName, "r");
-    if (!file)
-    {
-        printf("erro na abertura do arquivo de entrada !");
-        exit(1);
-    }
-
-    fseek(file, 0, SEEK_END);
-    inputSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    readBuffer = (char *)calloc(inputSize, sizeof(char));
-
-    fread(readBuffer, sizeof(char), inputSize, file);
-
-    fclose(file);
-    return readBuffer;
-}
 
 int main(void)
 {
@@ -298,22 +273,6 @@ r2:
     {
         atom->atom = ERROR;
     }
-}
-
-int compareInsensitiveString(char *valueToCompare, char *upperCaseValue, char *lowerCaseValue)
-{
-    int toCompareLen = strlen(valueToCompare);
-    int len = strlen(upperCaseValue);
-    if (len != toCompareLen)
-        return 1;
-
-    for (int i = 0; i < len; i++)
-    {
-        if (valueToCompare[i] != upperCaseValue[i] && valueToCompare[i] != lowerCaseValue[i])
-            return 1;
-    }
-
-    return 0;
 }
 
 void recognizeNum(TInformationAtom *atom, char **buffer)
