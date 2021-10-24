@@ -9,6 +9,25 @@ char *iniBuffer;
 TInformationAtom lookahead;
 
 void consume(TAtom atom);
+TInformationAtom getNextAtom(char *buffer);
+void syntacticAnalyze();
+void consumeBlock();
+void consumeVariableDeclaration();
+void consumeVariableType();
+void consumeVariableName();
+void consumeCompoundCommand();
+void consumeSimpleCommand();
+void consumeAssigmentCommand();
+void consumeConditionalCommand();
+void consumeLoopCommand();
+void consumeReadCommand();
+void consumeWriteCommand();
+void consumeExpression();
+void consumeSimpleExpression();
+void consumeSimpleOperator();
+void consumeTerm();
+void consumeFactor();
+void consumeOperatorTerm();
 
 int main(void)
 {
